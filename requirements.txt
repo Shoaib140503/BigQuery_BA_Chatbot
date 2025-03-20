@@ -6,3 +6,7 @@ langchain-google-genai
 sqlalchemy 
 pydantic
 sympy
+pinecone-client
+pinecone-gcp
+pinecone
+pandas
