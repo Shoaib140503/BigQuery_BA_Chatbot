@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\admin\Downloads\Chatbot_Gemini_BigQuery\backend\venv"
+VIRTUAL_ENV="C:\GenAI_project\BigQuery_BA_Chatbot\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
