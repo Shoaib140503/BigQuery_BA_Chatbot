@@ -8,7 +8,7 @@ st.set_page_config(page_title="Gemini-Powered BigQuery Chatbot", layout="wide")
 
 # Initialize chat history from Pinecone
 if "messages" not in st.session_state:
-    st.session_state.messages = get_chat_history()
+    st.session_state.messages = get_chat_history(user_query="")  # ✅ Fix: Provide a default empty query
     st.session_state.page = 0  # Initialize pagination index
 
 # Header
