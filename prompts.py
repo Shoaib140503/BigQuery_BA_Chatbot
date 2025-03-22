@@ -50,7 +50,7 @@ PROMPT_TEMPLATE = """
 If SQL is needed, generate a well-structured query:
 ```sql
 SELECT column_name(s)
-FROM `dev-ba-ai-chatbot.ba_ai_chatbot.cps_ba_bot_cps_sales_report_20250306`
+FROM `windy-skyline-453612-q2.data_for_testing.shopify_sales`
 WHERE conditions
 GROUP BY column(s)
 ORDER BY column DESC
@@ -64,7 +64,7 @@ LIMIT 10;
 🤖 **InsightBot:**  
 ```sql
 SELECT SUM(line_item_net_amount) AS total_revenue
-FROM `dev-ba-ai-chatbot.ba_ai_chatbot.cps_ba_bot_cps_sales_report_20250306`
+FROM `windy-skyline-453612-q2.data_for_testing.shopify_sales`
 WHERE DATE(date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH);
 ```
 "Total revenue for last month is **$X.XXM**."
@@ -73,7 +73,7 @@ WHERE DATE(date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH);
 🤖 **InsightBot:**  
 ```sql
 SELECT title AS product_name, SUM(line_item_net_amount) AS total_revenue
-FROM `dev-ba-ai-chatbot.ba_ai_chatbot.cps_ba_bot_cps_sales_report_20250306`
+FROM `windy-skyline-453612-q2.data_for_testing.shopify_sales`
 GROUP BY product_name
 ORDER BY total_revenue DESC
 LIMIT 5;
@@ -84,7 +84,7 @@ LIMIT 5;
 🤖 **InsightBot:**  
 ```sql
 SELECT title AS product_name, inventoryQuantity
-FROM `dev-ba-ai-chatbot.ba_ai_chatbot.cps_ba_bot_cps_sales_report_20250306`
+FROM `windy-skyline-453612-q2.data_for_testing.shopify_sales`
 WHERE inventoryQuantity < 50
 ORDER BY inventoryQuantity ASC;
 ```

@@ -27,7 +27,7 @@ if index_name not in existing_indexes:
 index = pc.Index(index_name)
 
 # Initialize Vertex AI Embeddings
-embedding_model = VertexAIEmbeddings(model_name="textembedding-gecko")  # ✅ Use specific model
+embedding_model = VertexAIEmbeddings(model_name="textembedding-gecko-multilingual")
 
 def update_memory(user_input, bot_response):
     """Stores chat history as embeddings in Pinecone."""

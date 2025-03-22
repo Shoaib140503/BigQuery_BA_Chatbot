@@ -82,7 +82,7 @@ def execute_react_query(user_query: str):
     """
 
     # ✅ Execute SQL query separately using SQLDatabaseChain
-    sql_result = sql_chain.run(sql_query)  
+    sql_result = sql_chain.invoke(sql_query)  
 
     response = react_agent.run(final_prompt)
 
