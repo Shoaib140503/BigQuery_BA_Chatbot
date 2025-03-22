@@ -8,9 +8,9 @@ if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
     exit()
 
 # Set Project ID and Dataset
-PROJECT_ID = "your-gcp-project-id"
-DATASET_ID = "your-dataset-id"
-TABLE_NAME = "your-table-name"
+PROJECT_ID = "windy-skyline-453612-q2"
+DATASET_ID = "data_for_testing"
+TABLE_NAME = "shopify_sales"
 
 # Initialize BigQuery Client
 try:
