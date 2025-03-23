@@ -5,10 +5,11 @@ from langchain.tools import Tool
 import sympy as sp 
 from database import db
 from config import GOOGLE_API_KEY
-from metadata import DIMENSIONS, METRICS
+from metadata import FULL_METADATA, METRICS
 from prompts import SYSTEM_INSTRUCTIONS, PROMPT_TEMPLATE
 from persona_prompt import PERSONA_PROMPT  # Include Persona Prompt
 from memory import get_chat_history, update_memory
+from langchain_core.messages import HumanMessage
 
 # Initialize Gemini LLM
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.2, api_key=GOOGLE_API_KEY)
@@ -40,42 +41,25 @@ react_agent = initialize_agent(
 
 def generate_sql_query(user_query: str):
     """Dynamically generates a SQL query using LLM based on user input."""
-
+    
     table_name = "`windy-skyline-453612-q2.data_for_testing.shopify_sales`"
     
-    # ✅ Extract relevant columns from metadata
-    selected_columns = []
-    
-    for col in DIMENSIONS.keys():
-        if col in user_query.lower():
-            selected_columns.append(col)
-
-    for col in METRICS.keys():
-        if col in user_query.lower():
-            selected_columns.append(f"SUM({col}) AS total_{col}")
+    # ✅ Extract relevant columns based on metadata dictionary
+    selected_columns = [
+        f"SUM({col}) AS total_{col}" if col in METRICS else col
+        for col in FULL_METADATA.keys() if col in user_query.lower()
+    ]
 
     # ✅ Default selection if no specific column is mentioned
     if not selected_columns:
         selected_columns = ["*"]
 
-    # ✅ Prompt LLM to generate SQL query dynamically
-    llm_prompt = f"""
-    You are an expert in SQL and BigQuery. Based on the user's question, generate an optimized SQL query.
-    - Use {table_name} as the table.
-    - Select only the necessary columns.
-    - Use WHERE conditions when applicable.
-    - Apply GROUP BY, ORDER BY, or LIMIT as needed.
-    - Do not add explanations—only output the raw SQL query.
+    # ✅ Use PROMPT_TEMPLATE for structured query generation
+    llm_prompt = PROMPT_TEMPLATE.format(query=user_query)
 
-    ### User Query:
-    "{user_query}"
+    sql_query = llm.invoke([HumanMessage(content=llm_prompt)])  # ✅ Proper format
 
-    ### SQL Query:
-    """
-    
-    sql_query = llm(llm_prompt)  # Use Gemini LLM to generate the SQL query dynamically
-
-    return sql_query.strip()  # ✅ Ensures clean output
+    return sql_query.content.strip() 
 
 
 def execute_react_query(user_query: str):

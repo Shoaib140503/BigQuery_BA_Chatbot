@@ -29,11 +29,11 @@ col1, col2 = st.columns([1, 1])
 with col1:
     if st.button("⬅️ Previous", disabled=st.session_state.page == 0):
         st.session_state.page -= 1
-        st.experimental_rerun()
+        st.rerun()
 with col2:
     if st.button("Next ➡️", disabled=end_idx >= len(st.session_state.messages)):
         st.session_state.page += 1
-        st.experimental_rerun()
+        st.rerun()
 
 # Input field
 user_query = st.chat_input("Ask something about your BigQuery data...")
@@ -67,4 +67,4 @@ if st.button("🗑️ Clear Chat"):
     clear_memory()
     st.session_state.messages = []
     st.session_state.page = 0
-    st.experimental_rerun()
+    st.rerun()
