@@ -8,7 +8,7 @@ st.set_page_config(page_title="Gemini-Powered BigQuery Chatbot", layout="wide")
 
 # Initialize chat history from Pinecone
 if "messages" not in st.session_state:
-    st.session_state.messages = get_chat_history(user_query="")  # ✅ Fix: Provide a default empty query
+    st.session_state.messages = get_chat_history(user_query="")  # ✅ Load chat history properly
     st.session_state.page = 0  # Initialize pagination index
 
 # Header
@@ -19,12 +19,13 @@ messages_per_page = 5
 start_idx = st.session_state.page * messages_per_page
 end_idx = start_idx + messages_per_page
 
-# Display paginated chat history
+# ✅ Display paginated chat history
 for message in st.session_state.messages[start_idx:end_idx]:
-    with st.chat_message("assistant" if "Bot:" in message else "user"):
-        st.markdown(message)
+    role, content = message.split(": ", 1)
+    with st.chat_message("assistant" if role == "Bot" else "user"):
+        st.markdown(content)
 
-# Pagination Controls
+# ✅ Pagination Controls
 col1, col2 = st.columns([1, 1])
 with col1:
     if st.button("⬅️ Previous", disabled=st.session_state.page == 0):
@@ -35,34 +36,37 @@ with col2:
         st.session_state.page += 1
         st.rerun()
 
-# Input field
+# ✅ User Input Field
 user_query = st.chat_input("Ask something about your BigQuery data...")
 
 if user_query:
-    # Store user message
+    # ✅ Store & Display User Query First
+    with st.chat_message("user"):
+        st.markdown(user_query)
+
     st.session_state.messages.append(f"User: {user_query}")
 
-    # Validate SQL security
+    # ✅ Validate SQL security
     if not validate_query(user_query):
         response = "⚠️ Unsafe query detected. Please refine your question."
     else:
         response = execute_react_query(user_query)
 
-    # Format response
+    # ✅ Format the response
     formatted_response = format_response(response)
 
-    # Display Assistant response
+    # ✅ Display Assistant Response
     with st.chat_message("assistant"):
-        st.markdown(f"Bot: {formatted_response['response']}")
+        st.markdown(formatted_response["response"])
 
-    # Store Assistant message
+    # ✅ Store Assistant Response in Memory
     st.session_state.messages.append(f"Bot: {formatted_response['response']}")
-    update_memory(user_query, formatted_response['response'])  # Store in Pinecone
+    update_memory(user_query, formatted_response["response"])
 
-    # Keep only the last 20 messages
+    # ✅ Keep only the last 20 messages
     st.session_state.messages = st.session_state.messages[-20:]
 
-# Add a delete button to clear chat history
+# ✅ Add Clear Chat Button
 if st.button("🗑️ Clear Chat"):
     clear_memory()
     st.session_state.messages = []

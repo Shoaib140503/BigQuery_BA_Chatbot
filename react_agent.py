@@ -61,12 +61,21 @@ def generate_sql_query(user_query: str):
 
     return sql_query.content.strip() 
 
-
 def execute_react_query(user_query: str):
     """Processes user query using persona-based reasoning and metadata."""
     chat_history = get_chat_history()
     sql_query = generate_sql_query(user_query)
 
+    # ✅ Execute SQL query first to get the actual result
+    sql_result = sql_chain.invoke(sql_query)
+
+    # Extract SQL execution output
+    if isinstance(sql_result, dict) and 'result' in sql_result:
+        sql_answer = sql_result['result']
+    else:
+        sql_answer = "I couldn't retrieve the data. Please check the query."
+
+    # ✅ Now generate a response using Persona and System Instructions
     final_prompt = f"""
     {PERSONA_PROMPT}
     
@@ -77,16 +86,17 @@ def execute_react_query(user_query: str):
 
     ### **User Query:** {user_query}
 
-    ### **Generated SQL Query:**
-    {sql_query}
+    ### **SQL Result:**
+    {sql_answer}
+
+    Please generate a clear and structured response.
     """
 
-    # ✅ Execute SQL query separately using SQLDatabaseChain
-    sql_result = sql_chain.invoke(sql_query)  
-
+    # ✅ Let the AI format the response naturally
     response = react_agent.run(final_prompt)
 
-    # Update memory with the latest conversation
+    # ✅ Update memory and return the final response
     update_memory(user_query, response)
 
-    return f"{response}\n\n**SQL Result:**\n{sql_result}"
+    return response
+
