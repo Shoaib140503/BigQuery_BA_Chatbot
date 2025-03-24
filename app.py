@@ -6,10 +6,10 @@ from memory import get_chat_history, update_memory, clear_memory
 # Streamlit UI Setup
 st.set_page_config(page_title="Gemini-Powered BigQuery Chatbot", layout="wide")
 
-# Initialize chat history from Pinecone
+# Initialize chat history
 if "messages" not in st.session_state:
-    st.session_state.messages = get_chat_history(user_query="")  # ✅ Load chat history properly
-    st.session_state.page = 0  # Initialize pagination index
+    st.session_state.messages = get_chat_history(user_query="")
+    st.session_state.page = 0
 
 # Header
 st.title("Gemini-Powered BigQuery Chatbot 🤖")
@@ -19,9 +19,13 @@ messages_per_page = 5
 start_idx = st.session_state.page * messages_per_page
 end_idx = start_idx + messages_per_page
 
-# ✅ Display paginated chat history
+# ✅ Display chat history safely
 for message in st.session_state.messages[start_idx:end_idx]:
-    role, content = message.split(": ", 1)
+    if ": " in message:
+        role, content = message.split(": ", 1)
+    else:
+        role, content = "assistant", message  # Default role if formatting fails
+
     with st.chat_message("assistant" if role == "Bot" else "user"):
         st.markdown(content)
 
@@ -40,33 +44,32 @@ with col2:
 user_query = st.chat_input("Ask something about your BigQuery data...")
 
 if user_query:
-    # ✅ Store & Display User Query First
+    # ✅ Display user message before processing
     with st.chat_message("user"):
         st.markdown(user_query)
 
     st.session_state.messages.append(f"User: {user_query}")
 
-    # ✅ Validate SQL security
+    # ✅ Validate query security
     if not validate_query(user_query):
         response = "⚠️ Unsafe query detected. Please refine your question."
     else:
         response = execute_react_query(user_query)
 
-    # ✅ Format the response
+    # ✅ Format and display bot response
     formatted_response = format_response(response)
 
-    # ✅ Display Assistant Response
     with st.chat_message("assistant"):
         st.markdown(formatted_response["response"])
 
-    # ✅ Store Assistant Response in Memory
+    # ✅ Store chat in history
     st.session_state.messages.append(f"Bot: {formatted_response['response']}")
     update_memory(user_query, formatted_response["response"])
 
     # ✅ Keep only the last 20 messages
     st.session_state.messages = st.session_state.messages[-20:]
 
-# ✅ Add Clear Chat Button
+# ✅ Add "Clear Chat" Button
 if st.button("🗑️ Clear Chat"):
     clear_memory()
     st.session_state.messages = []
