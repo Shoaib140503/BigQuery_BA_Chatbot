@@ -1,5 +1,6 @@
 import os
 import hashlib
+import json
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from langchain_google_vertexai import VertexAIEmbeddings
@@ -35,31 +36,32 @@ def generate_unique_id(text: str):
     return hashlib.md5(text.encode()).hexdigest()
 
 def update_memory(user_input, bot_response):
-    """Stores chat history as embeddings in Pinecone."""
+    """Stores chat history in Pinecone with a max limit of 20 messages."""
     text = f"User: {user_input}\nBot: {bot_response}"
     vector = embedding_model.embed_query(text)
 
-    unique_id = generate_unique_id(text)  # 🔹 Use a unique hash instead of first 20 characters
+    unique_id = generate_unique_id(text)  # Use a unique hash for storage
 
+    # Store new chat entry
     index.upsert(
         vectors=[{"id": unique_id, "values": vector, "metadata": {"chat": text}}]
     )
 
-def get_chat_history(user_query: str = ""):
-    """Retrieves the most relevant chat history from Pinecone using query embeddings."""
-    if not user_query:
-        return ["No previous chat history found. Ask a question to start!"]  # 🔹 Default message
+    # Fetch latest 20 chat messages
+    chat_history = get_chat_history()
+    if len(chat_history) > 20:
+        # Delete the oldest chat from Pinecone
+        oldest_chat_id = generate_unique_id(chat_history[0])
+        index.delete(ids=[oldest_chat_id])
 
-    query_embedding = embedding_model.embed_query(user_query)
-    results = index.query(vector=query_embedding, top_k=5, include_metadata=True)
+def get_chat_history():
+    """Retrieves the last 20 chat history entries from Pinecone."""
+    results = index.query(vector=[0.0] * 768, top_k=20, include_metadata=True)
 
     history = [res["metadata"]["chat"] for res in results.get("matches", [])]
-    
-    return history if history else ["No relevant chat history found."]
+
+    return history if history else ["No previous chat history found."]
 
 def clear_memory():
     """Deletes all chat history in Pinecone."""
-    index_stats = index.describe_index_stats()
-
-    if index_stats["total_vector_count"] > 0:
-        index.delete(delete_all=True, namespace="")  # 🔹 Ensure full deletion
+    index.delete(delete_all=True, namespace="")
