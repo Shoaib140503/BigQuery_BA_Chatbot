@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_pinecone import Pinecone as PineconeVectorStore
+import pinecone 
 
 # Load environment variables
 load_dotenv()
@@ -63,5 +64,12 @@ def get_chat_history():
     return history if history else ["No previous chat history found."]
 
 def clear_memory():
-    """Deletes all chat history in Pinecone."""
-    index.delete(delete_all=True, namespace="")
+    """Deletes all chat history in Pinecone and handles empty namespace errors."""
+    try:
+        index.delete(delete_all=True, namespace="")
+        return "✅ Chat history cleared successfully."
+    except pinecone.exceptions.PineconeException as e:
+        if "Namespace not found" in str(e):
+            return "⚠️ No previous chat present to clear."
+        else:
+            return f"🚨 Error clearing chat: {e}"

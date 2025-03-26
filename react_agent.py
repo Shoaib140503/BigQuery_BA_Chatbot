@@ -1,53 +1,61 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import initialize_agent, AgentType
 from langchain_experimental.sql import SQLDatabaseChain 
-from langchain.tools import Tool
-import sympy as sp 
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from database import db
 from config import GOOGLE_API_KEY
-from metadata import FULL_METADATA, METRICS
+from metadata import FULL_METADATA, METRICS, COLUMN_MAPPINGS
 from prompts import SYSTEM_INSTRUCTIONS, PROMPT_TEMPLATE
 from persona_prompt import PERSONA_PROMPT  # Include Persona Prompt
 from memory import get_chat_history, update_memory
 from langchain_core.messages import HumanMessage
 
 # Initialize Gemini LLM
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.2, api_key=GOOGLE_API_KEY)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.1, api_key=GOOGLE_API_KEY)
 
 # SQL Database Chain (Replaces SQLDatabaseToolkit)
 sql_chain = SQLDatabaseChain.from_llm(llm, db)
 
-# SymPy-based Math Tool
-def sympy_calculator(expression: str):
-    """Safely evaluates mathematical expressions using SymPy."""
-    try:
-        return str(sp.sympify(expression).evalf())
-    except Exception:
-        return "Invalid mathematical expression."
-
-math_tool = Tool(
-    name="Calculator",
-    func=sympy_calculator,
-    description="Accurately evaluates mathematical expressions using SymPy."
-)
+#instantiate toolkit for agent to access database
+toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
 # ReAct Agent with Memory and Persona Integration
 react_agent = initialize_agent(
     llm=llm,
-    tools=[math_tool],  # ✅ Removed deprecated SQLDatabaseToolkit
+    tools=toolkit.get_tools(),  # ✅ Removed deprecated SQLDatabaseToolkit
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True
 )
+
+def map_columns(user_query: str):
+    """Maps user-friendly terms in the query to actual BigQuery column names."""
+    for user_friendly, actual_column in COLUMN_MAPPINGS.items():
+        user_query = user_query.lower().replace(user_friendly.lower(), actual_column)
+    return user_query
+
+def clean_sql_query(query: str) -> str:
+    """Cleans the generated SQL query by removing markdown formatting and backticks."""
+    query = query.strip()
+    if query.startswith("```sql"):
+        query = query[6:]  # Remove ```sql
+    if query.startswith("```"):
+        query = query[3:]  # Remove starting backticks
+    if query.endswith("```"):
+        query = query[:-3]  # Remove ending backticks
+    return query.strip()
 
 def generate_sql_query(user_query: str):
     """Dynamically generates a SQL query using LLM based on user input."""
     
     table_name = "`windy-skyline-453612-q2.data_for_testing.shopify_sales`"
     
+    # ✅ Map user-friendly terms to actual column names
+    mapped_query = map_columns(user_query)
+    
     # ✅ Extract relevant columns based on metadata dictionary
     selected_columns = [
         f"SUM({col}) AS total_{col}" if col in METRICS else col
-        for col in FULL_METADATA.keys() if col in user_query.lower()
+        for col in FULL_METADATA.keys() if col in mapped_query.lower()
     ]
 
     # ✅ Default selection if no specific column is mentioned
@@ -55,11 +63,14 @@ def generate_sql_query(user_query: str):
         selected_columns = ["*"]
 
     # ✅ Use PROMPT_TEMPLATE for structured query generation
-    llm_prompt = PROMPT_TEMPLATE.format(query=user_query)
+    llm_prompt = PROMPT_TEMPLATE.format(query=mapped_query)
 
     sql_query = llm.invoke([HumanMessage(content=llm_prompt)])  # ✅ Proper format
+    
+    # ✅ Clean the generated SQL query
+    sql_query_cleaned = clean_sql_query(sql_query.content)
 
-    return sql_query.content.strip() 
+    return sql_query_cleaned
 
 def execute_react_query(user_query: str):
     """Processes user query using persona-based reasoning and metadata."""
@@ -78,25 +89,27 @@ def execute_react_query(user_query: str):
     # ✅ Now generate a response using Persona and System Instructions
     final_prompt = f"""
     {PERSONA_PROMPT}
-    
-    {SYSTEM_INSTRUCTIONS}
 
-    ### **Chat History:**
-    {chat_history}
+    {SYSTEM_INSTRUCTIONS}
 
     ### **User Query:** {user_query}
 
     ### **SQL Result:**
     {sql_answer}
 
-    Please generate a clear and structured response.
+    Please generate only the final answer as a well-framed and complete sentence, including all key details necessary for clarity.
     """
 
     # ✅ Let the AI format the response naturally
-    response = react_agent.run(final_prompt)
+    response = react_agent.invoke(final_prompt)
 
-    # ✅ Update memory and return the final response
-    update_memory(user_query, response)
+    # ✅ Extract only the final answer
+    if isinstance(response, dict) and 'output' in response:
+        final_answer = response['output']  # ✅ Extract clean answer
+    else:
+        final_answer = response.strip()
 
-    return response
+    # ✅ Update memory and return only the output
+    update_memory(user_query, final_answer)
 
+    return final_answer  # ✅ Now it returns only the answer

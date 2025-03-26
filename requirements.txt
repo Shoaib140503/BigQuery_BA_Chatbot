@@ -11,11 +11,10 @@ pinecone
 pandas
 altair
 langchain-pinecone
-pybigquery
 db-dtypes
 google-cloud-bigquery-storage
 langchain_google_vertexai
 langchain_experimental
 sqlalchemy-bigquery
-
-#python3 -m pip install --upgrade --no-cache-dir streamlit google-cloud-bigquery langchain langchain-community langchain-google-genai sqlalchemy pydantic sympy pinecone-client pinecone pandas altair langchain-pinecone pybigquery db-dtypes google-cloud-bigquery-storage langchain_google_vertexai langchain_experimental
+google-cloud-aiplatform 
+langgraph

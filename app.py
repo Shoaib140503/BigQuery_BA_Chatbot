@@ -49,3 +49,6 @@ if st.button("🗑️ Clear Chat"):
     clear_memory()
     st.session_state.messages = []
     st.rerun()
+
+    # ✅ Display a message in the UI
+    st.warning(message)

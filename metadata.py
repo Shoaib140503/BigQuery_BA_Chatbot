@@ -43,3 +43,70 @@ METRICS = {
 
 # Full Metadata Dictionary for Summarization
 FULL_METADATA = {**DIMENSIONS, **METRICS}
+
+# **User-friendly term → Actual BigQuery column mapping**
+COLUMN_MAPPINGS = {
+    # **Customer & Order Related Mappings**
+    "customer": "customer_id",
+    "customer id": "customer_id",
+    "order": "order_id",
+    "order id": "order_id",
+    "returning customer": "is_returning_customer_readable",
+    "new customer": "is_returning_customer_readable",
+
+    # **Date & Time Related Mappings**
+    "date": "date_actual",
+    "transaction date": "date_actual",
+    "order date": "date_actual",
+    "purchase date": "date_actual",
+    "timestamp": "date_actual",
+    "month": "date_actual",
+    "year": "date_actual",
+    "hour": "date_actual",
+
+    # **Location-Based Mappings**
+    "state": "billingAddress_province",
+    "city": "billingAddress_province",
+    "region": "billingAddress_province",
+    "country": "billingAddress_province",
+    "zipcode": "billingAddress_zip",
+    "postal code": "billingAddress_zip",
+
+    # **Product & Inventory Mappings**
+    "product": "title",
+    "product name": "title",
+    "product type": "productType",
+    "product id": "product_id",
+    "sku": "sku",
+    "variant": "variantTitle",
+    "variant name": "variantTitle",
+    "inventory": "inventoryQuantity",
+    "stock": "inventoryQuantity",
+    "on hand": "on_hand",
+    "available stock": "on_hand",
+    "total inventory": "totalInventory",
+
+    # **Pricing & Sales Metrics Mappings**
+    "price": "price",
+    "selling price": "price",
+    "discount": "line_item_discount",
+    "discount code": "discountCode",
+    "gross amount": "line_item_gross_amount",
+    "net amount": "line_item_net_amount",
+    "total amount": "line_item_total_amount",
+    "shipping": "line_item_shipping",
+    "shipping cost": "line_item_shipping",
+    "taxes": "line_item_taxes",
+    "total taxes": "line_item_taxes",
+    "return": "line_item_return",
+    "refund": "line_item_return",
+
+    # **Sales Performance & Order Metrics**
+    "quantity": "quantity",
+    "sold quantity": "quantity",
+    "sales": "line_item_net_amount",
+    "revenue": "line_item_net_amount",
+    "total revenue": "line_item_net_amount",
+    "orders": "orders",
+    "number of orders": "orders",
+}
