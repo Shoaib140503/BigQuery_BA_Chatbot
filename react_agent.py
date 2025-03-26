@@ -92,6 +92,9 @@ def execute_react_query(user_query: str):
 
     {SYSTEM_INSTRUCTIONS}
 
+    ### **Chat History:**
+    {chat_history}
+
     ### **User Query:** {user_query}
 
     ### **SQL Result:**
