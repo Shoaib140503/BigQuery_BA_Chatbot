@@ -2,7 +2,7 @@ import re
 
 def validate_query(query: str) -> bool:
     """Reject queries that could be unsafe (DROP, DELETE, etc.)."""
-    blacklist = ["DROP", "DELETE", "TRUNCATE", "ALTER", "--", "xp_", "UNION", "INSERT", "UPDATE"]
+    blacklist = ["CREATE", "DROP", "DELETE", "TRUNCATE", "ALTER", "--", "xp_", "UNION", "INSERT", "UPDATE"]
     
     # Check for dangerous keywords
     if any(term in query.upper() for term in blacklist):

@@ -7,6 +7,7 @@ from config import GOOGLE_API_KEY
 from metadata import FULL_METADATA, METRICS, COLUMN_MAPPINGS
 from prompts import SYSTEM_INSTRUCTIONS, PROMPT_TEMPLATE
 from persona_prompt import PERSONA_PROMPT  # Include Persona Prompt
+from general_responses import handle_general_queries
 from memory import get_chat_history, update_memory
 from langchain_core.messages import HumanMessage
 
@@ -74,12 +75,19 @@ def generate_sql_query(user_query: str):
 
 def execute_react_query(user_query: str):
     """Processes user query using persona-based reasoning and metadata."""
+
+
+    # ✅ Check if the query is a general (non-SQL) question
+    general_response = handle_general_queries(user_query)
+    if general_response:
+        return general_response  # ✅ Directly return a predefined response for general questions
+    
     chat_history = get_chat_history()
     sql_query = generate_sql_query(user_query)
 
     # ✅ Execute SQL query first to get the actual result
     sql_result = sql_chain.invoke(sql_query)
-
+    
     # Extract SQL execution output
     if isinstance(sql_result, dict) and 'result' in sql_result:
         sql_answer = sql_result['result']
