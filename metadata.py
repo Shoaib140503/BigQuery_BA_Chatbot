@@ -53,6 +53,8 @@ COLUMN_MAPPINGS = {
     "order id": "order_id",
     "returning customer": "is_returning_customer_readable",
     "new customer": "is_returning_customer_readable",
+    "old_customer": "is_returning_customer_readable",
+    "first time customer": "is_returning_customer_readable",
 
     # **Date & Time Related Mappings**
     "date": "date_actual",
@@ -75,6 +77,9 @@ COLUMN_MAPPINGS = {
     # **Product & Inventory Mappings**
     "product": "title",
     "product name": "title",
+    "product title": "title",
+    "item": "title",
+    "item name": "title",
     "product type": "productType",
     "product id": "product_id",
     "sku": "sku",

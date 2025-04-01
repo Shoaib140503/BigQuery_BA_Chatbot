@@ -1,6 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import initialize_agent, AgentType
-from langchain_experimental.sql import SQLDatabaseChain 
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from database import db
 from config import GOOGLE_API_KEY
@@ -14,16 +13,13 @@ from langchain_core.messages import HumanMessage
 # Initialize Gemini LLM
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.1, api_key=GOOGLE_API_KEY)
 
-# SQL Database Chain (Replaces SQLDatabaseToolkit)
-sql_chain = SQLDatabaseChain.from_llm(llm, db)
-
-#instantiate toolkit for agent to access database
+# Instantiate toolkit for agent to access database
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
 # ReAct Agent with Memory and Persona Integration
 react_agent = initialize_agent(
     llm=llm,
-    tools=toolkit.get_tools(),  # ✅ Removed deprecated SQLDatabaseToolkit
+    tools=toolkit.get_tools(),
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True
 )
@@ -48,8 +44,6 @@ def clean_sql_query(query: str) -> str:
 def generate_sql_query(user_query: str):
     """Dynamically generates a SQL query using LLM based on user input."""
     
-    table_name = "`windy-skyline-453612-q2.data_for_testing.shopify_sales`"
-    
     # ✅ Map user-friendly terms to actual column names
     mapped_query = map_columns(user_query)
     
@@ -64,7 +58,7 @@ def generate_sql_query(user_query: str):
         selected_columns = ["*"]
 
     # ✅ Use PROMPT_TEMPLATE for structured query generation
-    llm_prompt = PROMPT_TEMPLATE.format(query=mapped_query)
+    llm_prompt = PROMPT_TEMPLATE.format(metadata=FULL_METADATA, query=mapped_query)
 
     sql_query = llm.invoke([HumanMessage(content=llm_prompt)])  # ✅ Proper format
     
@@ -76,7 +70,6 @@ def generate_sql_query(user_query: str):
 def execute_react_query(user_query: str):
     """Processes user query using persona-based reasoning and metadata."""
 
-
     # ✅ Check if the query is a general (non-SQL) question
     general_response = handle_general_queries(user_query)
     if general_response:
@@ -84,16 +77,7 @@ def execute_react_query(user_query: str):
     
     chat_history = get_chat_history()
     sql_query = generate_sql_query(user_query)
-
-    # ✅ Execute SQL query first to get the actual result
-    sql_result = sql_chain.invoke(sql_query)
     
-    # Extract SQL execution output
-    if isinstance(sql_result, dict) and 'result' in sql_result:
-        sql_answer = sql_result['result']
-    else:
-        sql_answer = "I couldn't retrieve the data. Please check the query."
-
     # ✅ Now generate a response using Persona and System Instructions
     final_prompt = f"""
     {PERSONA_PROMPT}
@@ -105,8 +89,8 @@ def execute_react_query(user_query: str):
 
     ### **User Query:** {user_query}
 
-    ### **SQL Result:**
-    {sql_answer}
+    ### **SQL Query:**
+    {sql_query}
 
     Please generate only the final answer as a well-framed and complete sentence, including all key details necessary for clarity.
     """
