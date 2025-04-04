@@ -4,6 +4,7 @@ def handle_general_queries(user_query: str):
 
     general_responses = {
         # 🔹 Greetings & Formal Queries
+        "hii": "Hello! How can I assist you today?",
         "hello": "Hello! How can I assist you today?",
         "hey": "Hey! How can I help with your business analytics?",
         "how are you": "I'm just a bot, but I'm always ready to help!",
@@ -12,6 +13,7 @@ def handle_general_queries(user_query: str):
         "what is your objective": "My goal is to help you analyze business data, generate SQL queries, and provide meaningful insights from BigQuery.",
         "what can you do": "I can generate optimized SQL queries, analyze business trends, and help with sales, inventory, and customer insights!",
         "thank you": "You're welcome! Let me know if you need anything else.",
+        "thanks": "You're welcome! Let me know if you need anything else.",
         "bye": "Goodbye! Have a great day!",
 
         # 🔹 Business & Finance Terms

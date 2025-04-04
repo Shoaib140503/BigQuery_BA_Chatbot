@@ -2,7 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import initialize_agent, AgentType
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from database import db
-from config import GOOGLE_API_KEY
+from config import GCP_PROJECT_ID #, GOOGLE_API_KEY
 from metadata import FULL_METADATA, METRICS, COLUMN_MAPPINGS
 from prompts import SYSTEM_INSTRUCTIONS, PROMPT_TEMPLATE
 from persona_prompt import PERSONA_PROMPT  # Include Persona Prompt
@@ -10,8 +10,19 @@ from general_responses import handle_general_queries
 from memory import get_chat_history, update_memory
 from langchain_core.messages import HumanMessage
 
+import vertexai
+from vertexai.generative_models import GenerativeModel, Part
+from langchain_google_vertexai import VertexAI
+
 # Initialize Gemini LLM
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.1, api_key=GOOGLE_API_KEY)
+#llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.1, api_key=GOOGLE_API_KEY)
+
+LOCATION = "us-central1"
+# Initialize Vertex AI
+#vertexai.init(project=GCP_PROJECT_ID, location=LOCATION)
+#llm = GenerativeModel("gemini-2.0-flash-001")
+
+llm = VertexAI(model_name="gemini-2.0-flash-001", project=GCP_PROJECT_ID, location=LOCATION)
 
 # Instantiate toolkit for agent to access database
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
@@ -63,7 +74,7 @@ def generate_sql_query(user_query: str):
     sql_query = llm.invoke([HumanMessage(content=llm_prompt)])  # ✅ Proper format
     
     # ✅ Clean the generated SQL query
-    sql_query_cleaned = clean_sql_query(sql_query.content)
+    sql_query_cleaned = clean_sql_query(str(sql_query))
 
     return sql_query_cleaned
 
@@ -92,11 +103,15 @@ def execute_react_query(user_query: str):
     ### **SQL Query:**
     {sql_query}
 
-    Please generate only the final answer as a well-framed and complete sentence, including all key details necessary for clarity.
+    Please generate only the final answer as a well-framed and complete sentence, including all key details necessary for clarity. Do NOT return just the SQL query. Instead, execute the query and provide the complete final answer in proper format.
+    - First, generate a SQL query based on the user's question.  
+    - Execute the query and retrieve the results.  
+    - Format the final response as structured JSON.
+    Also, If the user query doesn't provide enough information to generate a meaningful SQL query and if it seems like an incomplete or nonsensical query, then don't try to generate a SQL query for it instead printout- "provide full information to execute this"
     """
 
     # ✅ Let the AI format the response naturally
-    response = react_agent.invoke(final_prompt)
+    response = react_agent.invoke(final_prompt, handle_parsing_errors=True)
 
     # ✅ Extract only the final answer
     if isinstance(response, dict) and 'output' in response:

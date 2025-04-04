@@ -1,8 +1,8 @@
 """
 Metadata Definitions for BigQuery Dataset
-Project: windy-skyline-453612-q2
-Dataset: data_for_testing
-Table: shopify_sales
+Project: dev-ba-ai-chatbot
+Dataset: ba_ai_chatbot
+Table: cps_ba_bot_cps_sales_report_20250306
 """
 
 # Dimensions (Used for grouping, filtering, and segmentation)

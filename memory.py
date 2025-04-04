@@ -14,7 +14,7 @@ load_dotenv()
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 # Define Pinecone index
-index_name = os.getenv("PINECONE_INDEX", "chat-history")
+index_name = os.getenv("PINECONE_INDEX", "business-analyst-chatbot")
 
 # Check if the index exists
 existing_indexes = [i.name for i in pc.list_indexes()]
@@ -23,7 +23,7 @@ if index_name not in existing_indexes:
         name=index_name,
         dimension=768,
         metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region="us-west-2")
+        spec=ServerlessSpec(cloud="GCP", region="us-central1")
     )
 
 # Connect to the index
@@ -31,6 +31,7 @@ index = pc.Index(index_name)
 
 # Initialize Vertex AI Embeddings
 embedding_model = VertexAIEmbeddings(model_name="textembedding-gecko-multilingual")
+
 
 def generate_unique_id(text: str):
     """Generate a unique ID using a hash function to prevent duplicates."""
