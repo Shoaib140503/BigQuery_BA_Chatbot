@@ -11,7 +11,7 @@ from memory import get_chat_history, update_memory
 from langchain_core.messages import HumanMessage
 
 import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+#from vertexai.generative_models import GenerativeModel, Part
 from langchain_google_vertexai import VertexAI
 
 # Initialize Gemini LLM
