@@ -123,3 +123,5 @@ def execute_react_query(user_query: str):
     update_memory(user_query, final_answer)
 
     return final_answer  # ✅ Now it returns only the answer
+
+    #done hai na bro
